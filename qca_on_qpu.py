@@ -1,5 +1,5 @@
 import argparse
-from bigham import extract_polarization
+from bigham import extract_polarization, plot_circuit
 from qcadtrans import QCACircuit
 
 import dwave
@@ -78,8 +78,15 @@ for i in range(len(circuit.nodes)):
     elif cf == FIXED_T:
         drivers[pos] = float(node["pol"])
 
+# # TODO: REMOVE THIS SHIM
+# cells = {(1, 0), (2, 1), (3, 1), (4, 0)}
+# drivers = {(0, 0): 1}
+# inputs = {}
+# outputs = {}
+# # ENDTODO
+
 # TODO: iterate over all input states
-input_state = 0
+input_state = 1
 all_drivers = drivers
 
 for input_idx, (name, pos) in enumerate(inputs.items()):
@@ -153,42 +160,69 @@ print('Constructing BQM...')
 bqm = dimod.BinaryQuadraticModel(linear, quadratic, 0, dimod.SPIN)
 
 # get DWave sampler and target mapping edgelist
-print('Choosing solver...')
-client = Client.from_config()
-solver = None
-qca_arch = 'pegasus'
-try:
-    if qpu_arch == 'zephyr':
-        solver = client.get_solver('Advantage2_prototype1.1').id
-    elif qpu_arch == 'pegasus':
-        solver = client.get_solver('Advantage_system4.1').id
-    elif qpu_arch == 'chimera':
-        solver = client.get_solver('DW_2000Q_6').id
-    else:
-        raise ValueError('Specified QPU architecture is not supported.')
-except SolverNotFoundError:
-    print(f'The pre-programmed D-Wave solver name for architecture '
-            '\'{qpu_arch}\' is not available. Find the latest available '
-            'solvers by:\n'
-            'from dwave.cloud import Client\nclient = Client.from_config()\n'
-            'client.get_solvers()\nAnd update this script.')
-    raise
-
-# get the specified QPU
-dwave_sampler = DWaveSampler(solver=solver)
-
-# run the problem
-use_result = []
-sampler = None
-response = None
 if use_classical:
     print('Choosing classical sampler...')
     sampler = neal.SimulatedAnnealingSampler()
 else:
+    print('Choosing solver...')
+    client = Client.from_config()
+    solver = None
+    qca_arch = 'pegasus'
+    try:
+        if qpu_arch == 'zephyr':
+            solver = client.get_solver('Advantage2_prototype1.1').id
+        elif qpu_arch == 'pegasus':
+            solver = client.get_solver('Advantage_system4.1').id
+        elif qpu_arch == 'chimera':
+            solver = client.get_solver('DW_2000Q_6').id
+        else:
+            raise ValueError('Specified QPU architecture is not supported.')
+    except SolverNotFoundError:
+        print(f'The pre-programmed D-Wave solver name for architecture '
+                '\'{qpu_arch}\' is not available. Find the latest available '
+                'solvers by:\n'
+                'from dwave.cloud import Client\nclient = Client.from_config()\n'
+                'client.get_solvers()\nAnd update this script.')
+        raise
+
+    # get the specified QPU
+    dwave_sampler = DWaveSampler(solver=solver)
+
+    # run the problem
+    use_result = []
+    sampler = None
+    response = None
     print('Choosing D-Wave QPU as sampler...')
     sampler = EmbeddingComposite(dwave_sampler)
 
-response = sampler.sample(bqm, num_reads=50)
+response = sampler.sample(bqm, num_reads=500)
 print('Problem completed from selected sampler.')
 
-print(response.record)
+# Find minimum energy solution
+winning_record = response.record[0]
+for record in response.record:
+    # Find the minimum energy state
+    if record[1] < winning_record[1]:
+        winning_record = record
+
+count = 0
+for record in response.record:
+    # Find the minimum energy state
+    if np.all(record[0] == winning_record[0]):
+        count += 1
+
+states, energy, _ = winning_record
+print(states)
+print(energy)
+print(count)
+output_state = dict(zip([*response.variables], states))
+print(outputs)
+print("BQM:")
+print(linear)
+print(quadratic)
+print("")
+print(output_state)
+for output, output_pos in outputs.items():
+    print(f"{output}: {output_state[output_pos]}")
+
+plot_circuit({**output_state, **all_drivers}, list(all_drivers), "hi", "output.png")

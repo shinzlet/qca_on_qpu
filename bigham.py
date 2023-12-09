@@ -139,7 +139,7 @@ def plot_circuit(data, drivers, title, filename):
 
   # Setting the limits and aspect
   ax.set_xlim(x_min-0.5, x_max + 0.5)
-  ax.set_ylim(y_min-0.5, y_max + 0.5)
+  ax.set_ylim(y_max + 0.5, y_min-0.5)
   ax.set_aspect('equal', adjustable='box')
 
   fig.suptitle(title)
