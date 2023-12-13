@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib.patches import FancyBboxPatch
 from matplotlib import pyplot as plt
 from scipy.optimize import curve_fit
 import itertools
@@ -148,30 +149,35 @@ def simulate_circuit(circuit, drivers, Ek0, t):
 # These are ordered such that angle 0 and 2 being in the "on" state indicates
 # the polarization is +1, and vice versa for the -1 and angles 1 and 3
 ROT_ANGLES = np.arange(0, 4) * np.pi / 2
-BOX_ANGLES = ROT_ANGLES + np.pi / 4
-def draw_cell(ax, pos, pol, rot, name=None, bg_color = "gray", hole_color = "orange", dot_color = "black", size = 0.9, dot_spacing = 0.3, dot_size = 0.08):
+BOX_ANGLES = ROT_ANGLES - np.pi / 4
+def draw_cell(ax, pos, pol, rot, name=None, bg_color = "#c8b7c4", edge_color = "#483745", hole_color = "None", active_edge_color="#ffa3eb", dot_color = "#ff74ff", size = 0.9, dot_spacing = 0.25, dot_size = 0.1, border_radius=0.1, linewidth=2, text_color="black"):
+    inner_size = size - 2 * border_radius
+    center_offset = inner_size / 2
     padding = size / 2
     x, y = pos
-    ax.fill_between([x - padding, x + padding], y - padding, y + padding, color=bg_color)
+    background = FancyBboxPatch((x - center_offset, y - center_offset), inner_size, inner_size, f"Round, pad={border_radius}", facecolor=bg_color, edgecolor=edge_color, linewidth=linewidth)
+    ax.add_patch(background)
 
     angles = ROT_ANGLES if rot else BOX_ANGLES
     for (i, angle) in enumerate(angles):
         style = {}
         if pol == None:
             # There is no polarization info (i.e. indeterminate)
-            style = {"facecolor": dot_color, "edgecolor": "black", "hatch": "////////"}
-        elif bit_to_polarization(i % 2) == pol:
+            style = {"facecolor": "None", "edgecolor": edge_color, "linewidth": linewidth}
+        elif bit_to_polarization(i % 2) == -pol:
             # An electron lives in this circle
-            style = {"color": dot_color}
+            style = {"facecolor": dot_color, "edgecolor": active_edge_color, "linewidth": linewidth}
         else:
             # No electron here
-            style = {"color": hole_color}
+            style = {"facecolor": hole_color, "edgecolor": edge_color, "linewidth": linewidth}
 
         dot_x = pos[0] + dot_spacing * np.cos(angle)
         dot_y = pos[1] + dot_spacing * np.sin(angle)
         dot = plt.Circle((dot_x, dot_y), dot_size, **style)
         ax.add_patch(dot)
-    # else:
+
+    if name:
+        ax.text(x, y + 0.07, name, fontweight="bold", color=text_color, fontsize=7, bbox={"facecolor": "white", "edgecolor": "None", "alpha": 0.6}, horizontalalignment='center')
 
 def plot_circuit(cells, drivers, inputs, outputs, polarizations = {}, title = None, filename = None, **kwargs):
     fig, ax = plt.subplots()
@@ -198,6 +204,14 @@ def plot_circuit(cells, drivers, inputs, outputs, polarizations = {}, title = No
         draw_cell(ax, pos, polarizations.get(pos), rot, name=name, bg_color="pink", **kwargs)
 
     ax.set_aspect('equal', adjustable='box')
+
+    # Determining the size of the grid
+    x_coords, y_coords = zip(*(list(cells.keys()) + list(drivers.keys()) + [i[0] for i in inputs.values()]))
+    x_min, x_max = min(x_coords), max(x_coords)
+    y_min, y_max = min(y_coords), max(y_coords)
+    ax.set_xlim(x_min-0.5, x_max + 0.5)
+    ax.set_ylim(y_max + 0.5, y_min-0.5)
+
     fig.suptitle(title)
 
     if filename == None:
