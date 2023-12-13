@@ -1,3 +1,7 @@
+import math
+import numpy as np
+import itertools
+
 import dwave
 import dwave.embedding
 import dwave.inspector
@@ -8,11 +12,6 @@ import dimod
 from dimod.reference.samplers import ExactSolver
 from minorminer import find_embedding
 import neal
-
-# general math and Python dependencies
-import math
-import numpy as np
-import itertools
 
 ADJACENT_DIRECTIONS = np.array([[-1, 0], [0, 1], [1, 0], [0, -1]])
 DIAGONAL_DIRECTIONS = np.array([[-1, -1], [-1, 1], [1, -1], [1, 1]])
@@ -61,7 +60,7 @@ def anneal(cells, drivers, samples = 500, qpu_arch = 'classical'):
         sampler = EmbeddingComposite(dwave_sampler)
 
     bqm = construct_bqm(cells, drivers)
-    response = sampler.sample(bqm, num_reads=500)
+    response = sampler.sample(bqm, num_reads=samples)
     print('Problem completed from selected sampler.')
 
     return response
@@ -72,18 +71,26 @@ def construct_bqm(cells, drivers):
     linear = {}
     quadratic = {}
 
-    def sum_neighbours(pos, directions, cb):
+    def sum_neighbours(pos, rot, directions, cb):
         pos = np.array(pos)
         total = 0
         for i in range(directions.shape[0]):
-            total += cb(pos, pos + directions[i, :])
+            total += cb(pos, rot, pos + directions[i, :])
         return total
 
-    def driver_contribution(pos, other_pos):
-        r = np.linalg.norm(pos - other_pos)
+    def driver_contribution(pos, rot, other_pos):
         other_pos_tuple = (other_pos[0], other_pos[1])
+        print(rot)
+
         if other_pos_tuple in drivers:
-            return drivers[other_pos_tuple] / r ** 5
+            other_pol, other_rot = drivers[other_pos_tuple]
+            # We only consider interaction if the cells have the same
+            # rotation. Alternately rotated cells have no interaction
+            # due to the symmetry of the problem.
+            if other_rot == rot:
+                r = np.linalg.norm(pos - other_pos)
+                return other_pol / r ** 5
+
         return 0
 
     def scale_func(f, multiplier):
@@ -93,8 +100,9 @@ def construct_bqm(cells, drivers):
     for (i, pos_i) in enumerate(cells):
         # The linear term includes the effect of drivers on this cell.
         linear[pos_i] = 0
-        linear[pos_i] += sum_neighbours(pos_i, ADJACENT_DIRECTIONS, scale_func(driver_contribution, -Ek0))
-        linear[pos_i] += sum_neighbours(pos_i, DIAGONAL_DIRECTIONS, scale_func(driver_contribution, Ek0))
+        rot_i = cells[pos_i]["rot"]
+        linear[pos_i] += sum_neighbours(pos_i, rot_i, ADJACENT_DIRECTIONS, scale_func(driver_contribution, -Ek0))
+        linear[pos_i] += sum_neighbours(pos_i, rot_i, DIAGONAL_DIRECTIONS, scale_func(driver_contribution, Ek0))
 
         # Cells that are adjacent to this one should have a negative energy
         # contribution when the quadratic term is positive (i.e. they are of

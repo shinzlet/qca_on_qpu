@@ -10,9 +10,9 @@ FIXED_T  = 3
 def assign_inputs(drivers, inputs, input_state):
     # Create a copy of the drivers array that converts the input state
     # into fixed polarization cells:
-    all_drivers = drivers
-    for input_idx, (name, pos) in enumerate(inputs.items()):
-        all_drivers[pos] = extract_polarization(input_state, input_idx)
+    all_drivers = drivers.copy()
+    for input_idx, (name, (pos, rot)) in enumerate(inputs.items()):
+        all_drivers[pos] = (extract_polarization(input_state, input_idx), rot)
 
     return all_drivers
 
@@ -25,7 +25,7 @@ def load_qca(filename, spacing = 20):
     cells = {}
     # Map from (x, y) tuples of position to polarization strength
     drivers = {}
-    # string name -> location. Inputs are not in the `cells` or `drivers` dictionaries: to actually
+    # string name -> (location, rot). Inputs are not in the `cells` or `drivers` dictionaries: to actually
     # produce a hamiltonian, a new drivers dict needs to be created that assigns input cells their set
     # polarization values.
     inputs = {}
@@ -45,11 +45,11 @@ def load_qca(filename, spacing = 20):
         if cf == NORMAL_T:
             cells[pos] = node
         elif cf == INPUT_T:
-            inputs[node["name"]] = pos
+            inputs[node["name"]] = (pos, node["rot"])
         elif cf == OUTPUT_T:
             cells[pos] = node
             outputs[node["name"]] = pos
         elif cf == FIXED_T:
-            drivers[pos] = float(node["pol"])
+            drivers[pos] = (float(node["pol"]), node["rot"])
 
     return cells, drivers, inputs, outputs
