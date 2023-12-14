@@ -80,16 +80,23 @@ def construct_bqm(cells, drivers):
 
     def driver_contribution(pos, rot, other_pos):
         other_pos_tuple = (other_pos[0], other_pos[1])
-        print(rot)
 
         if other_pos_tuple in drivers:
             other_pol, other_rot = drivers[other_pos_tuple]
+
             # We only consider interaction if the cells have the same
             # rotation. Alternately rotated cells have no interaction
             # due to the symmetry of the problem.
             if other_rot == rot:
                 r = np.linalg.norm(pos - other_pos)
-                return other_pol / r ** 5
+
+                # The cells should alternate if they're in a rotated wire
+                if rot:
+                    relationship = -1
+                else:
+                    relationship = 1
+
+                return relationship * other_pol / r ** 5
 
         return 0
 
@@ -108,17 +115,29 @@ def construct_bqm(cells, drivers):
         # contribution when the quadratic term is positive (i.e. they are of
         # the same sign) and a positive sign when the quadratic term is negative.
 
-        # The quadratic term includes the effect of adjacent normal cells.
+        # The quadratic term includes the effect of adjacent non-driver cells. This could also
+        # be computed by a fixed-time neighbour lookup as we do for the linear case,
+        # but the code would get more complex because we need to know the indexes
+        # and avoid double-counting embedding graph edges. Instead we just eat this O(n^2),
+        # because n is small.
         for j in range(i+1, len(cells)):
             pos_j = cell_order[j]
+            # We assume (and it is true when cell i and j are directly adjacent) that
+            # there is no interaction between rotated and unrotated cells.
+            if cells[pos_j]["rot"] != rot_i:
+                continue
+
+            # -1 if the cells want to alternate, 1 if they don't alternate.
+            relationship = -1 if rot_i else 1
+
             # If cells i and j are adjacent, 
             r = np.linalg.norm(np.array(pos_i) - np.array(pos_j))
-            if r > 0.99 and r < 1.01:
+            if (r > 0.99 and r < 1.01) or (r > 1.99 and r < 2.01): # r ~= 1, r ~= 2
                 # adjacent (negative energy terms means they should be the same signs)
-                quadratic[(pos_i, pos_j)] = -Ek0
-            elif r > 1.4 and r < 1.42:
+                quadratic[(pos_i, pos_j)] = -Ek0 / r ** 5 * relationship
+            elif r > 1.4 and r < 1.42: # r ~= sqrt(2)
                 # diagonal (positive energy term means they should be opposite signs)
-                quadratic[(pos_i, pos_j)] = Ek0 / r ** 5
+                quadratic[(pos_i, pos_j)] = Ek0 / r ** 5 * relationship
 
     # construct a bqm containing the provided self-biases (linear) and couplings
     # (quadratic). Specify the problem as SPIN (Ising).

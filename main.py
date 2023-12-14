@@ -11,13 +11,14 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('qca_file') # The name of the qca file
 parser.add_argument('--spacing', default=20) # The center-to-center qca cell spacing 
-parser.add_argument('--arch', default='classical') # The center-to-center qca cell spacing 
-parser.add_argument('--samples', default=500) # The center-to-center qca cell spacing 
+parser.add_argument('--arch', default='classical') # The QPU architecture to run on (or classical)
+parser.add_argument('--samples', default=500) # The number of samples that should be taken to find the minimum energy state
+parser.add_argument('--ignore-rotated', action='store_true', dest="ignore_rotated") # Deletes rotated cells if true
 
 args = parser.parse_args()
 
 # Load the QCA file
-cells, drivers, inputs, outputs = load_qca(args.qca_file, args.spacing)
+cells, drivers, inputs, outputs = load_qca(args.qca_file, args.ignore_rotated, args.spacing)
 
 # For each input, create a BQM and anneal it. Extract statistics, outputs, and
 # create visualizations.
@@ -62,5 +63,5 @@ for input_state in range(num_input_states):
     # we inject the driver states back in:
     polarizations = {pos: pol for pos, (pol, _) in all_drivers.items()}
     polarizations = {**polarizations, **output_state}
-    plot_circuit(cells, drivers, inputs, outputs, polarizations = polarizations)#, f"{input_state}.png")
+    plot_circuit(cells, drivers, inputs, outputs, polarizations = polarizations, title=f"state {input_state}")#, filename=f"{input_state}.png")
     break

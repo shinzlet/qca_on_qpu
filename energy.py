@@ -80,3 +80,7 @@ print("The kink energy of a rotated wire is", Ek_rot / Ek, "* Ek")
 eq = box_1 + translate(rot_1, x)
 ne = box_1 + translate(rot_n1, x)
 print((ensemble_energy(eq) - ensemble_energy(ne)) / Ek)
+
+same = box_1 + translate(box_1, 2 * x + y)
+diff = box_1 + translate(box_n1, 2 * x + y)
+print("sqrt(5) distance energy", (ensemble_energy(same) - ensemble_energy(diff)) / Ek)

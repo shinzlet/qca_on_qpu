@@ -16,7 +16,7 @@ def assign_inputs(drivers, inputs, input_state):
 
     return all_drivers
 
-def load_qca(filename, spacing = 20):
+def load_qca(filename, ignore_rotated = False, spacing = 20):
     # Supply the file name to the QCADesigner file and it will be parsed by the 
     # QCACircuit class.
     circuit = QCACircuit(fname=filename, verbose=False)
@@ -41,6 +41,9 @@ def load_qca(filename, spacing = 20):
         x = int(node["x"] / spacing)
         y = int(node["y"] / spacing)
         pos = (x, y)
+
+        if ignore_rotated and node["rot"]:
+            continue
 
         if cf == NORMAL_T:
             cells[pos] = node

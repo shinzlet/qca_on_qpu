@@ -150,7 +150,7 @@ def simulate_circuit(circuit, drivers, Ek0, t):
 # the polarization is +1, and vice versa for the -1 and angles 1 and 3
 ROT_ANGLES = np.arange(0, 4) * np.pi / 2
 BOX_ANGLES = ROT_ANGLES - np.pi / 4
-def draw_cell(ax, pos, pol, rot, name=None, bg_color = "#c8b7c4", edge_color = "#483745", hole_color = "None", active_edge_color="#ffa3eb", dot_color = "#ff74ff", size = 0.9, dot_spacing = 0.25, dot_size = 0.1, border_radius=0.1, linewidth=2, text_color="black"):
+def draw_cell(ax, pos, pol, rot, name=None, bg_color = "#CBB0C5", edge_color = "#483745", hole_color = "None", active_edge_color="#FBBFEE", dot_color = "#FF61DD", size = 0.9, dot_spacing = 0.25, dot_size = 0.1, border_radius=0.1, linewidth=2, text_color="black"):
     inner_size = size - 2 * border_radius
     center_offset = inner_size / 2
     padding = size / 2
@@ -186,7 +186,7 @@ def plot_circuit(cells, drivers, inputs, outputs, polarizations = {}, title = No
     output_lookup = dict(zip(outputs.values(), outputs.keys()))
 
     for pos, (pol, rot) in drivers.items():
-        draw_cell(ax, pos, pol, rot, bg_color="blue", **kwargs)
+        draw_cell(ax, pos, pol, rot, bg_color="#797C8C", dot_color="#637AF9", active_edge_color="#ADB8F7", edge_color="#2a2f58", **kwargs)
 
     for pos, cell in cells.items():
         pol = polarizations.get(pos)
@@ -198,10 +198,10 @@ def plot_circuit(cells, drivers, inputs, outputs, polarizations = {}, title = No
             draw_cell(ax, pos, pol, rot, **kwargs)
         else:
             # This is an output cell!
-            draw_cell(ax, pos, pol, rot, bg_color="yellow", name=name, **kwargs)
+            draw_cell(ax, pos, pol, rot, bg_color="#C5AB98", dot_color="#FBB582", active_edge_color="#FFCDA8", name=name, **kwargs)
 
     for name, (pos, rot) in inputs.items():
-        draw_cell(ax, pos, polarizations.get(pos), rot, name=name, bg_color="pink", **kwargs)
+        draw_cell(ax, pos, polarizations.get(pos), rot, name=name, bg_color="#b7c8c5", dot_color="#80F9E4", active_edge_color="#B4F9ED", edge_color="#28564E", **kwargs)
 
     ax.set_aspect('equal', adjustable='box')
 
