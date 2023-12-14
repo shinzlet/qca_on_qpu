@@ -1,5 +1,5 @@
 import argparse
-from bigham import plot_circuit
+from qca_plotting import plot_circuit
 from load_qca import load_qca, assign_inputs
 from qca_on_qpu import anneal
 import numpy as np

@@ -1,5 +1,5 @@
 from qcadtrans import QCACircuit
-from bigham import extract_polarization
+from utils import extract_polarization
 
 # Different cell IDs that QCADesigner uses
 NORMAL_T = 0
