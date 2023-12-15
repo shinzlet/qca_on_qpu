@@ -11,10 +11,14 @@ def assign_inputs(drivers, inputs, input_state):
     # Create a copy of the drivers array that converts the input state
     # into fixed polarization cells:
     all_drivers = drivers.copy()
+    input_values = {}
     for input_idx, (name, (pos, rot)) in enumerate(inputs.items()):
-        all_drivers[pos] = (extract_polarization(input_state, input_idx), rot)
+        pol = extract_polarization(input_state, input_idx)
+        all_drivers[pos] = (pol, rot)
+        input_values[name] = pol
 
-    return all_drivers
+    state_name = ', '.join([f"{input_name} = {value}" for input_name, value in input_values.items()])
+    return (all_drivers, state_name)
 
 def load_qca(filename, ignore_rotated = False, spacing = 20):
     # Supply the file name to the QCADesigner file and it will be parsed by the 

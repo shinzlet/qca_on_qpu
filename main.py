@@ -12,19 +12,26 @@ parser = argparse.ArgumentParser(
 parser.add_argument('qca_file') # The name of the qca file
 parser.add_argument('--spacing', default=20) # The center-to-center qca cell spacing 
 parser.add_argument('--arch', default='classical') # The QPU architecture to run on (or classical)
-parser.add_argument('--samples', default=500) # The number of samples that should be taken to find the minimum energy state
+parser.add_argument('--samples', type=int, default=500) # The number of samples that should be taken to find the minimum energy state
 parser.add_argument('--ignore-rotated', action='store_true', dest="ignore_rotated") # Deletes rotated cells if true
+parser.add_argument('--only-plot', action='store_true', dest="only_plot")
+parser.add_argument('--title') # The title: %s is where the state info should be appended (unless only plot)
+parser.add_argument('--save') # The save filepath: %s is where the state info should be appended (unless only plot)
 
 args = parser.parse_args()
 
 # Load the QCA file
 cells, drivers, inputs, outputs = load_qca(args.qca_file, args.ignore_rotated, args.spacing)
 
+if args.only_plot:
+    plot_circuit(cells, drivers, inputs, outputs, title=args.title, filename=args.save)
+    exit()
+
 # For each input, create a BQM and anneal it. Extract statistics, outputs, and
 # create visualizations.
 num_input_states = 2 ** len(inputs)
 for input_state in range(num_input_states):
-    all_drivers = assign_inputs(drivers, inputs, input_state)
+    (all_drivers, state_name) = assign_inputs(drivers, inputs, input_state)
     response = anneal(cells, all_drivers, samples=args.samples, qpu_arch=args.arch)
 
     # import pdb; pdb.set_trace()
@@ -47,6 +54,7 @@ for input_state in range(num_input_states):
     else:
         # On real hardware, the tallying works and we can use the first (lowest energy) soln.
         states, energy, count, _ = response.record[0]
+        import pdb; pdb.set_trace()
 
     print(states)
     print(energy)
@@ -63,5 +71,10 @@ for input_state in range(num_input_states):
     # we inject the driver states back in:
     polarizations = {pos: pol for pos, (pol, _) in all_drivers.items()}
     polarizations = {**polarizations, **output_state}
-    plot_circuit(cells, drivers, inputs, outputs, polarizations = polarizations, title=f"state {input_state}")#, filename=f"{input_state}.png")
-    break
+    filename = None
+    if args.save:
+        filename = args.save % state_name
+    title = None
+    if args.title:
+        title = args.title % state_name
+    plot_circuit(cells, drivers, inputs, outputs, polarizations = polarizations, title=title, filename=filename)
