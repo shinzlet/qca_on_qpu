@@ -4,6 +4,7 @@ from qca_on_qpu import anneal
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import PercentFormatter
+import re
 
 parser = argparse.ArgumentParser(
                     prog='crossover_histogram',
@@ -19,6 +20,9 @@ parser.add_argument('--save') # The save filepath
 
 args = parser.parse_args()
 
+re_number = re.compile(".*(\d+).*")
+crossover_type = re_number.match(args.qca_file).group(1)
+
 # Load the QCA file
 cells, drivers, inputs, outputs = load_qca(args.qca_file, True, args.spacing)
 
@@ -29,32 +33,23 @@ input_state = 1
 (all_drivers, _) = assign_inputs(drivers, inputs, input_state)
 response = anneal(cells, all_drivers, samples=args.samples, qpu_arch=args.arch)
 
-# The classical annealer outputs very different data. Tallying is broken and
-# energies aren't sorted.
 energies = np.array([record[1] for record in response.record])
+weights = np.array([record[2] for record in response.record])
+
 assert(len(outputs) == 1)
 output_pos = list(outputs.values())[0]
 output_idx = [*response.variables].index(output_pos)
-import pdb; pdb.set_trace()
+# import pdb; pdb.set_trace()
+print(response.record)
 num_acceptable = sum(int(record[0][output_idx] == 1) * record[2] for record in response.record)
-# if args.arch == 'classical':
-#     # tally = {}
-#     # for record in response.record:
-#     #     if record[1] in tally:
-#     #         tally[record[1]] += 1
-#     #     else:
-#     #         tally[record[1]] = 1
-# else:
-#     print("lol")
 
-# print(tally)
-# energies = np.array(list(tally.keys()))
-print(f"Number in acceptable state: {num_acceptable / args.samples * 100:.3}")
+print(f"% in acceptable state: {num_acceptable / args.samples * 100:.3}")
 width = (np.max(energies) - np.min(energies)) / energies.size * 0.8
-plt.hist(energies, bins=50, density=True)
+plt.hist(energies, bins=15, weights = weights / args.samples)
 plt.ylabel(r"% in state")
 plt.xlabel("Energy of State")
-plt.gca().yaxis.set_major_formatter(PercentFormatter(xmax=100))
+plt.title(f"Annealed State Energies ({args.arch}, {crossover_type}-cell Crossover, N={args.samples})")
+plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
 
 if args.title:
     plt.title(args.title)

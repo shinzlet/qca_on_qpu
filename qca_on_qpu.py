@@ -25,10 +25,10 @@ t = 0.01 * Ek0
 def anneal(cells, drivers, samples = 500, qpu_arch = 'classical'):
     # get DWave sampler and target mapping edgelist
     if qpu_arch == 'classical':
-        print('Choosing classical sampler...')
+        # print('Choosing classical sampler...')
         sampler = neal.SimulatedAnnealingSampler()
     else:
-        print('Choosing solver...')
+        # print('Choosing solver...')
         client = Client.from_config()
         solver = None
         qca_arch = 'pegasus'
@@ -42,11 +42,11 @@ def anneal(cells, drivers, samples = 500, qpu_arch = 'classical'):
             else:
                 raise ValueError('Specified QPU architecture is not supported.')
         except SolverNotFoundError:
-            print(f'The pre-programmed D-Wave solver name for architecture '
-                    '\'{qpu_arch}\' is not available. Find the latest available '
-                    'solvers by:\n'
-                    'from dwave.cloud import Client\nclient = Client.from_config()\n'
-                    'client.get_solvers()\nAnd update this script.')
+            # print(f'The pre-programmed D-Wave solver name for architecture '
+            #         '\'{qpu_arch}\' is not available. Find the latest available '
+            #         'solvers by:\n'
+            #         'from dwave.cloud import Client\nclient = Client.from_config()\n'
+            #         'client.get_solvers()\nAnd update this script.')
             raise
 
         # get the specified QPU
@@ -56,12 +56,12 @@ def anneal(cells, drivers, samples = 500, qpu_arch = 'classical'):
         use_result = []
         sampler = None
         response = None
-        print('Choosing D-Wave QPU as sampler...')
+        # print('Choosing D-Wave QPU as sampler...')
         sampler = EmbeddingComposite(dwave_sampler)
 
     bqm = construct_bqm(cells, drivers)
     response = sampler.sample(bqm, num_reads=samples)
-    print('Problem completed from selected sampler.')
+    # print('Problem completed from selected sampler.')
 
     return response
 
@@ -141,6 +141,6 @@ def construct_bqm(cells, drivers):
 
     # construct a bqm containing the provided self-biases (linear) and couplings
     # (quadratic). Specify the problem as SPIN (Ising).
-    print('Constructing BQM...')
+    # print('Constructing BQM...')
     bqm = dimod.BinaryQuadraticModel(linear, quadratic, 0, dimod.SPIN)
     return bqm

@@ -4,7 +4,7 @@ import re
 import argparse
 
 # Commands used to generate figures for the report:
-# python3 spectra.py spectra/xover_1.csv spectra/xover_3.csv --overlay --log --figwidth 9 --figheight 5 --save overlaid.png
+# python3 spectra.py spectra/xover_1.csv spectra/xover_3.csv --overlay --log --figwidth 9 --figheight 5 --thermal --save overlaid.png
 # python3 spectra.py spectra/xover_1.csv spectra/xover_3.csv --ymax 3 --xmin 0.3 --figwidth 6 --save zoomed_crossover.png
 
 parser = argparse.ArgumentParser(
@@ -20,6 +20,7 @@ parser.add_argument('--ymax', type=float)
 parser.add_argument('--xmin', type=float)
 parser.add_argument('--figwidth', type=int, default=8)
 parser.add_argument('--figheight', type=int, default=5)
+parser.add_argument('--thermal', action='store_true')
 args = parser.parse_args()
 
 # List of colormaps to cycle through
@@ -111,6 +112,8 @@ for idx, file in enumerate(args.files):
 
     ax.set_xlabel("Normalized Time (unitless)")
     ax.set_ylabel("Energy / h (GHz)")
+    if args.thermal and ax == axs[0]:
+        ax.axhline(0.3, linestyle='--', color='black', label="Thermal Energy (0.3GHz)")
 
 fig.suptitle("QCA Coplanar Crossover Eigenvalue Spectra")
 fig.tight_layout()

@@ -1,0 +1,14 @@
+============= State A = -1 =================
+998 / 1000 (99.80%) of samples found the ground state
+output 'Y':
+  Ground state configuration: 1
+  1/1000 (0.10%) of states had Y = +1
+  999/1000 (99.90%) of states had Y = -1
+
+============= State A = 1 =================
+999 / 1000 (99.90%) of samples found the ground state
+output 'Y':
+  Ground state configuration: -1
+  1/1000 (0.10%) of states had Y = +1
+  999/1000 (99.90%) of states had Y = -1
+
