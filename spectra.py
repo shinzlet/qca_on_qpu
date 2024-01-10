@@ -9,8 +9,8 @@ import argparse
 
 parser = argparse.ArgumentParser(
                     prog='spectra',
-                    description='runs a ',
-                    epilog='Text at the bottom of help')
+                    description='Plots spectra (for part c)',
+                    epilog='i.e. python3 spectra.py spectra/xover_1.csv spectra/xover_3.csv --ymax 3 --xmin 0.3 --figwidth 6 --save zoomed_crossover.png')
 
 parser.add_argument('files', type=argparse.FileType('r'), nargs='+')
 parser.add_argument('--log', action='store_true')

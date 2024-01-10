@@ -6,8 +6,8 @@ import numpy as np
 
 parser = argparse.ArgumentParser(
                     prog='qca_on_qpu',
-                    description='runs a ',
-                    epilog='Text at the bottom of help')
+                    description='runs a QCA circuit using either simulated annealing or a D-Wave quantum annealer.',
+                    epilog='i.e. DWAVE_API_KEY="DEV0-...." python3 main.py file.qca --save "state %s.png", --title "QCA Circuit (state = %s)"')
 
 parser.add_argument('qca_file') # The name of the qca file
 parser.add_argument('--spacing', default=20) # The center-to-center qca cell spacing 
@@ -17,7 +17,7 @@ parser.add_argument('--ignore-rotated', action='store_true', dest="ignore_rotate
 parser.add_argument('--only-plot', action='store_true', dest="only_plot")
 parser.add_argument('--title') # The title: %s is where the state info should be appended (unless only plot)
 parser.add_argument('--save') # The save filepath: %s is where the state info should be appended (unless only plot)
-parser.add_argument('--no-plot', action='store_true', dest='no_plot')
+parser.add_argument('--no-plot', action='store_true', dest='no_plot') # Skips plotting and just runs the analysis
 parser.add_argument('--broken', action='store_true', dest='broken') # plots the most common state whose outputs differ from the ground state
 
 args = parser.parse_args()

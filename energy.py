@@ -1,3 +1,8 @@
+# Note:
+# I did not end up needing to use this, thankfully. This is my attempt to compute
+# the energy of arbitrary charge ensembles so that the kink energy between cells
+# could be used for shear-aligned rotated and normal cells.
+
 # Computes the energy of various charge configurations that occur
 # in the QCA to QPU translation
 

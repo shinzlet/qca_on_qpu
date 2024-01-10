@@ -8,8 +8,8 @@ import re
 
 parser = argparse.ArgumentParser(
                     prog='crossover_histogram',
-                    description='runs a ',
-                    epilog='Text at the bottom of help')
+                    description='Simulates crossovers on the QPU and collects histograms of successes',
+    epilog='Example: python3 crossover_histogram.py crossovers/1\ cell\ crossover.py --arch zephyr --samples 1000 --save')
 
 parser.add_argument('qca_file') # The name of the qca file
 parser.add_argument('--spacing', default=20) # The center-to-center qca cell spacing 
